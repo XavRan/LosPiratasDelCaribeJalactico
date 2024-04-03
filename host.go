@@ -2,61 +2,65 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
+	"strconv"
+	"strings"
 )
 
 func main() {
-	IP := "localhost:"
-	PORT := "8001"
-
-	serverAddr := IP + PORT
-	udpAddr, err := net.ResolveUDPAddr("udp", serverAddr)
-
-	if err != nil {
-		fmt.Println("Error feo", err)
+	planets := []string{"PA", "PB", "PC", "PD", "PE", "PF"}
+	register := make(map[string]int)
+	for i := 0; i < len(planets); i++ {
+		register[planets[i]] = rand.Intn(100)
 	}
 
-	planetas := [40]string{"A", "B", "C", "D", "E", "F"}
+	addr := net.UDPAddr{
+		Port: 8081,
+		IP:   net.ParseIP("localhost"),
+	}
 
-	tesoros := [40]string{"7", "7", "7", "7", "7", "7"}
-
-	C1, C2, C3 := "123", "1234", "12345"
-
-	// Conexión con el servidor
-	conn, err := net.ListenUDP("udp4", udpAddr)
+	conn, err := net.ListenUDP("udp4", &addr)
 	if err != nil {
 		fmt.Println("Error al conectarse al servidor", err)
 	}
-	conn.Close()
 
-	fmt.Println("Conección exitosa")
-
+	msg := make([]byte, 1024)
 	for true {
-		fmt.Println("escuchando")
-
-		Capitan, err := net.ResolveUDPAddr("udp", C1)
-		Capitan2, err := net.ResolveUDPAddr("udp", C2)
-		Capitan3, err := net.ResolveUDPAddr("udp", C3)
-
-		if err != nil {
-			fmt.Println("Error feo", err)
+		for key, value := range register {
+			fmt.Println(key, "-", value)
 		}
 
-		conn1, err := net.ListenUDP("udp", Capitan)
-		conn2, err := net.ListenUDP("udp", Capitan2)
-		conn3, err := net.ListenUDP("udp", Capitan3)
-
+		n, err := conn.Read(msg)
 		if err != nil {
-			fmt.Println("Error al conectarse al servidor", err)
+			fmt.Println("Error al leer el mensaje", err)
 		}
 
-		fmt.Println("Conección exitosa")
+		dataString := string(msg[:n])
+		data := strings.Split(dataString, ",")
+		planet, captain, bountyStr := data[0], data[1], data[2]
 
-		fmt.Println("Capitan 1", conn1)
-		fmt.Println("Capitan 2", conn2)
-		fmt.Println("Capitan 3", conn3)
-		fmt.Println("Tesoro", tesoros)
-		fmt.Println("Planetas", planetas)
+		fmt.Println("Recepción de solicitud desde el Planeta %s, del capitán %s", planet, captain)
+
+		bounty, _ := strconv.Atoi(bountyStr)
+		destiny := MinPlanet(register)
+		register[destiny] += bounty
+
+		fmt.Println("Botín asignado al Planeta %s. cantidad actual: %d", destiny, register[destiny])
+
+		conn.Close()
 	}
 
+}
+
+func MinPlanet(register map[string]int) string {
+	var minKey string
+	var minValue int
+	for p, b := range register {
+		if b < minValue {
+			minKey = p
+			minValue = b
+		}
+	}
+	return minKey
 }

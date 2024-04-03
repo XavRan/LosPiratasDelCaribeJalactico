@@ -18,6 +18,7 @@ func main() {
 
 	planetas := [40]string{"A", "B", "C", "D", "E", "F"}
 
+	captain := []string{"C1", "C2", "C3"}
 	tesoros := [40]string{"7", "7", "7", "7", "7", "7"}
 
 	C1, C2, C3 := "123", "1234", "12345"
